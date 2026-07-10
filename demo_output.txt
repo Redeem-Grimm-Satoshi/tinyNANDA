@@ -1,0 +1,62 @@
+Cluster up: 5 nodes, RF=3, W=2, R=2  ->  ['http://127.0.0.1:8701', 'http://127.0.0.1:8702', 'http://127.0.0.1:8703', 'http://127.0.0.1:8704', 'http://127.0.0.1:8705']
+
+==================================================================
+  1) REGISTER 200 AGENTS  (NANDA Goal D: decentralized updates)
+==================================================================
+  200 signed publishes in 0.48s (421 writes/s through one client)
+  write latency p50=2.1ms  p95=2.9ms  (localhost)
+
+==================================================================
+  2) ANY-NODE RESOLUTION + CLIENT-SIDE VERIFY  (zero trust)
+==================================================================
+  60/60 resolved from random nodes, 60/60 Ed25519-verified client-side
+  read latency p50=4.8ms  p95=7.1ms
+
+==================================================================
+  3) ENDPOINT ROTATION  (NANDA Goal C: sub-second reachability)
+==================================================================
+  publish@node-0 -> v2 visible@node-4 in 9.1ms (target: <1000ms)  endpoints=['https://east.example.com/v2', 'https://west.example.com/v2']
+
+==================================================================
+  4) REVOCATION TOMBSTONE  (NANDA guarantee #3)
+==================================================================
+  revoked@node-1 -> HTTP 410 (Gone) @node-3 in 7.8ms; stale replays now rejected cluster-wide
+
+==================================================================
+  5) NODE FAILURE  (sloppy quorum keeps the cluster available)
+==================================================================
+  node-2 KILLED.
+  with 1/5 nodes down: 30/30 writes OK, 50/50 reads OK
+
+==================================================================
+  6) RESTART node-2  (gossip anti-entropy heals it)
+==================================================================
+    t+ 1.0s  node-2 records: 225
+  node-2 rebuilt 225 replica records from peers, no operator action.
+
+==================================================================
+  7) ATTACK SUITE  (NANDA Goal G: no self-advertised lies)
+==================================================================
+  7a forged identity (wrong key for did) -> HTTP 403 agent_id_pubkey_mismatch
+  7b tampered payload (sig mismatch)   -> HTTP 403 bad_signature
+  7c stale replay (valid sig, old ver) -> HTTP 409 stale: v2 stands everywhere
+  7d owner equivocation (same signed v)  -> rejected & flagged for audit
+
+==================================================================
+  8) TAMPER-EVIDENT AUDIT CHAIN  (governance & liability)
+==================================================================
+  agent demo-007 chain: 2 versions, client verification: chain_intact
+    v1  hash=60138255a45018b9…  prev=∅               …
+    v2  hash=62ec2c07cfb0d965…  prev=60138255a45018b9…
+
+==================================================================
+  CLUSTER SUMMARY
+==================================================================
+  node-0: 226 records | puts_ok=229  rejected=1   | coord W/R=55/25 | repairs=26 gossip=61
+  node-1: 225 records | puts_ok=229  rejected=1   | coord W/R=48/24 | repairs=23 gossip=67
+  node-2: 226 records | puts_ok=229  rejected=2   | coord W/R=0/0 | repairs=0 gossip=225
+  node-3: 230 records | puts_ok=232  rejected=0   | coord W/R=45/23 | repairs=26 gossip=77
+  node-4: 230 records | puts_ok=234  rejected=2   | coord W/R=58/23 | repairs=19 gossip=78
+
+XolixDB v0.1 demo complete. All eight scenarios passed.
+
